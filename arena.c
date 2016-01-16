@@ -132,7 +132,7 @@ void arena_trim(arena_t* arena)
 
 #include "test.h"
 
-static void test_arena(void)
+static void arena_test(void)
 {
 	arena_t* a = arena_create();
 	CU_ASSERT(a != NULL);
@@ -166,7 +166,7 @@ static void test_arena(void)
 
 	arena_destroy(a);
 }
-TEST_ADD(test_arena);
+TEST_ADD(arena_test);
 
 #endif // TEST
 
