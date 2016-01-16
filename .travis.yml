@@ -1,6 +1,9 @@
 language: c
 compiler:
     - gcc
+before_install:
+    - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+    - sudo apt-get update -qq
 before_script:
     - sudo apt-get install libcunit1-dev
 script: make test
