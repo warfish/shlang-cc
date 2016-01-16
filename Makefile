@@ -1,5 +1,5 @@
 CC := gcc
-CFLAGS := -Wall -O2 -g -std=c11 -I.
+CFLAGS := -Wall -O2 -g -std=c1x -I.
 LDFLAGS := -g -T test_sec.lds
 NASM := nasm
 
