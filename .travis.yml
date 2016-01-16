@@ -7,4 +7,4 @@ before_install:
     - sudo apt-get install -qq libcunit1-dev
     - if [ "$CC" = "gcc" ]; then sudo apt-get install -qq gcc-4.8; export CC="gcc-4.8"; fi
 script: 
-	- make test
+    - make test
