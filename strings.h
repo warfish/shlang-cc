@@ -5,6 +5,12 @@
 
 #pragma once
 
+/**
+ * \brief   Stored string.
+ * 
+ * Implementation stores a single unique value per known string.
+ * Instances can be tested for equality by comparing two pointers directly.
+ */
 typedef struct string
 {
     const char* ptr; // Unique pointer value
