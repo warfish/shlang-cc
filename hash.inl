@@ -1,6 +1,8 @@
 /*
  * "Generic" hash table
  * User defined a set of macros and includes this file to produce a specification
+ *
+ * TODO: Implementation is very simplistic, work on cache awareness
  */
 
 #if !defined(HASH_KEY_TYPE)

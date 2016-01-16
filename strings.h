@@ -29,9 +29,9 @@ int strings_init(void);
 
 /**
  * \brief   Store a new string.
-  *
- * \return  If @str@ already exists, this function returns a unique pointer to previously allocated string.
- *          Otherwise a new 
+ *
+ * \return  If any stored string compares equal to 'str', function will return already stored copy.
+ *          Otherwise a new string is created and returned.
  */
 string_t string(const char* str);
 
@@ -40,13 +40,28 @@ string_t string(const char* str);
  */
 typedef struct dict dict_t;
 
+/**
+ * \brief   Create new dictionary
+ */
 dict_t* dict_create(void);
 
+/**
+ * \brief   Insert a new dictionary value
+ * \return  0 on success, system error code on failure (ENOMEM)
+ */
 int dict_insert(dict_t* dict, string_t str, void* val);
 
+/**
+ * \brief   Look for existing dictionary value
+ */
 void* dict_search(dict_t* dict, string_t str);
 
+/**
+ * \brief   Remove value from a dictionary
+ */
 void dict_remove(dict_t* dict, string_t key);
 
+/**
+ * \brief   Release all dictionary resources
+ */
 void dict_destroy(dict_t* dict);
-
