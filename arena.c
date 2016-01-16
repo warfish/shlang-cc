@@ -35,6 +35,7 @@ typedef union
 typedef struct 
 {
 	list_head link;
+	size_t size;
 	_Alignas(anytype_t) char data[0];
 } block_t;
 
@@ -65,6 +66,8 @@ void arena_destroy(arena_t* arena)
 			free(list_entry(p, block_t, link));
 			p = next;
 		}
+
+		free(arena);
 	}
 }
 
@@ -74,15 +77,33 @@ void* arena_alloc(arena_t* arena, size_t bytes)
 		return NULL;
 	}
 
+	// Scan freelist for best-fit available block of sufficient size
+	block_t* best_fit = NULL;
+	list_for_each(arena->freelist, p) {
+		block_t* b = list_entry(p, block_t, link);
+		if ((b->size >= bytes) && (!best_fit || (b->size < best_fit->size))) {
+			best_fit = b;
+		}
+	}
+
+	if (best_fit) {
+		// Do not change best fit block size - we're not reallocating it
+		list_remove(&best_fit->link);
+		list_insert(&arena->blocks, &best_fit->link);
+		return (void*)best_fit->data;
+	}
+
+	// Allocate a new block
 	block_t* block = (block_t*) calloc(1, sizeof(*block) + bytes);
 	if (!block) {
 		return NULL;
 	}
 
+	block->size = bytes;
+
 	list_insert(&arena->blocks, &block->link);
-	
-	void* res = block->data;
-	return res;
+
+	return (void*)block->data;
 }
 
 void arena_free(arena_t* arena, void* ptr)
@@ -97,11 +118,10 @@ void arena_free(arena_t* arena, void* ptr)
 void arena_trim(arena_t* arena)
 {
 	if (arena) {
-		list_head* p = arena->freelist.next;
-		while (p != NULL) {
-			list_head* next = p->next;
+		while (!list_empty(&arena->freelist)) {
+			list_head* p = arena->freelist.next;
+			list_remove(p);
 			free(list_entry(p, block_t, link));
-			p = next;
 		}
 	}
 }
@@ -117,18 +137,33 @@ static void test_arena(void)
 	arena_t* a = arena_create();
 	CU_ASSERT(a != NULL);
 
-	void* p = NULL;
+	CU_ASSERT_TRUE(list_empty(&a->freelist));
+	CU_ASSERT_TRUE(list_empty(&a->blocks));
 
-	p = arena_alloc(NULL, 10);
+	void* p = arena_alloc(NULL, 10);
 	CU_ASSERT(p == NULL);
+	CU_ASSERT_TRUE(list_empty(&a->blocks));
 
-	p = arena_alloc(a, 10);
-	CU_ASSERT(p && IS_ALIGNED(p));
+	void* p1 = arena_alloc(a, 10);
+	CU_ASSERT(p1 && IS_ALIGNED(p));
+	CU_ASSERT_FALSE(list_empty(&a->blocks));
 
-	p = arena_alloc(a, 0);
+	void* p2 = arena_alloc(a, 0);
+	CU_ASSERT(p2 && IS_ALIGNED(p));	
+	CU_ASSERT_FALSE(list_empty(&a->blocks));
+
+	CU_ASSERT_TRUE(list_empty(&a->freelist));
+	
+	arena_free(a, p1);
+	CU_ASSERT_FALSE(list_empty(&a->freelist));
+
+	p = arena_alloc(a, 8);
 	CU_ASSERT(p && IS_ALIGNED(p));	
+	CU_ASSERT_TRUE(list_empty(&a->freelist));
 
-	CU_ASSERT(list_empty(&a->freelist));
+	arena_trim(a);
+	CU_ASSERT_TRUE(list_empty(&a->freelist));
+
 	arena_destroy(a);
 }
 TEST_ADD(test_arena);

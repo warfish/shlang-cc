@@ -11,7 +11,7 @@ TARGET := shlang-cc
 test: CFLAGS += -DTEST
 test: Makefile $(TARGET)
 	./shlang-cc
-	
+
 all: Makefile $(TARGET)
 
 $(TARGET): $(HDRS) $(OBJS)
