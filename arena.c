@@ -15,7 +15,8 @@
 
 struct arena
 {
-	slist_head blocks;
+	list_head blocks;		// List of allocated blocks
+	list_head freelist;	// List of free blocks
 };
 
 /* Alignment of this type is what we need to align allocated pointers to */
@@ -33,7 +34,7 @@ typedef union
 
 typedef struct 
 {
-	slist_head link;
+	list_head link;
 	_Alignas(anytype_t) char data[0];
 } block_t;
 
@@ -49,17 +50,19 @@ arena_t* arena_create(void)
 		return NULL;
 	}
 
-	slist_init(&arena->blocks);
+	list_init(&arena->blocks);
+	list_init(&arena->freelist);
 	return arena;
 }
 
 void arena_destroy(arena_t* arena)
 {
 	if (arena) {
-		slist_head* p = arena->blocks.next;
+		arena_trim(arena);
+		list_head* p = arena->blocks.next;
 		while (p != NULL) {
-			slist_head* next = p->next;
-			free(slist_entry(p, block_t, link));
+			list_head* next = p->next;
+			free(list_entry(p, block_t, link));
 			p = next;
 		}
 	}
@@ -76,10 +79,31 @@ void* arena_alloc(arena_t* arena, size_t bytes)
 		return NULL;
 	}
 
-	slist_insert(&arena->blocks, &block->link);
+	list_insert(&arena->blocks, &block->link);
 	
 	void* res = block->data;
 	return res;
+}
+
+void arena_free(arena_t* arena, void* ptr)
+{
+	if (arena && ptr) {
+		block_t* block = containerof(ptr, block_t, data);
+		list_remove(&block->link);
+		list_insert(&arena->freelist, &block->link);
+	}
+}
+
+void arena_trim(arena_t* arena)
+{
+	if (arena) {
+		list_head* p = arena->freelist.next;
+		while (p != NULL) {
+			list_head* next = p->next;
+			free(list_entry(p, block_t, link));
+			p = next;
+		}
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -96,14 +120,15 @@ static void test_arena(void)
 	void* p = NULL;
 
 	p = arena_alloc(NULL, 10);
-	assert(!p);
+	CU_ASSERT(p == NULL);
 
 	p = arena_alloc(a, 10);
-	assert(p && IS_ALIGNED(p));
+	CU_ASSERT(p && IS_ALIGNED(p));
 
 	p = arena_alloc(a, 0);
-	assert(p && IS_ALIGNED(p));	
+	CU_ASSERT(p && IS_ALIGNED(p));	
 
+	CU_ASSERT(list_empty(&a->freelist));
 	arena_destroy(a);
 }
 TEST_ADD(test_arena);
