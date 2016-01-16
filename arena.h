@@ -8,22 +8,22 @@
 #include <stdlib.h>
  
 /**
- * \brief	Opaque arena handle
+ * \brief   Opaque arena handle
  */
 typedef struct arena arena_t;
 
 /**
- * \brief 	Create new arena with default maximum block size
+ * \brief   Create new arena with default maximum block size
  */
 arena_t* arena_create(void);
 
 /**
- * \brief 	Allocate a block of memory inside an arena
+ * \brief   Allocate a block of memory inside an arena
  */
 void* arena_alloc(arena_t* arena, size_t bytes);
 
 /**
- * \brief 	Free allocated block
+ * \brief   Free allocated block
  *
  * To speed up possible future allocations freed blocks may not immediately be returned to system allocator
  * To release unused memory call @arena_trim
@@ -31,11 +31,11 @@ void* arena_alloc(arena_t* arena, size_t bytes);
 void arena_free(arena_t* arena, void* ptr);
 
 /**
- * \brief	Return freed blocks to system allocator
+ * \brief   Return freed blocks to system allocator
  */
 void arena_trim(arena_t* arena);
 
 /**
- * \brief	Free existing arena and all allocated blocks
+ * \brief   Free existing arena and all allocated blocks
  */
 void arena_destroy(arena_t* arena);

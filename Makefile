@@ -1,4 +1,4 @@
-CFLAGS := -Wall -O2 -g -std=c11 -I.
+CFLAGS := -Wall -g -std=c11 -I.
 LDFLAGS := -g -T test_sec.lds
 NASM := nasm
 

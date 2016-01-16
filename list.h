@@ -11,7 +11,7 @@
 
 typedef struct slist_head
 {
-	struct slist_head* next;
+    struct slist_head* next;
 } slist_head;
 
 #define SLIST_INIT {NULL}
@@ -19,34 +19,34 @@ typedef struct slist_head
 
 static inline void slist_init(slist_head* head)
 {
-	head->next = NULL;
+    head->next = NULL;
 }
 
 static inline void slist_insert(slist_head* head, slist_head* p)
 {
-	p->next = head->next;
-	head->next = p;
+    p->next = head->next;
+    head->next = p;
 }
 
 static inline void slist_remove(slist_head* head, slist_head* p)
 {
-	head->next = p->next;
+    head->next = p->next;
 }
 
 static inline bool slist_empty(slist_head* head)
 {
-	return head->next == NULL;
+    return head->next == NULL;
 }
 
 #define slist_for_each(head, p) \
-	for(slist_head* p = head.next; p != NULL; p = p->next)
+    for(slist_head* p = head.next; p != NULL; p = p->next)
 
 ///////////////////////////////////////////////////////////////////////////
 
 typedef struct list_head
 {
-	struct list_head* next;
-	struct list_head* prev;
+    struct list_head* next;
+    struct list_head* prev;
 } list_head;
 
 #define LIST_INIT {NULL, NULL}
@@ -54,41 +54,41 @@ typedef struct list_head
 
 static inline void list_init(list_head* head)
 {
-	head->next = NULL;
-	head->prev = NULL;
+    head->next = NULL;
+    head->prev = NULL;
 }
 
 static inline void list_insert(list_head* head, list_head* p)
 {
-	list_head* next = head->next;
-	
-	head->next = p;
-	p->prev = head;
+    list_head* next = head->next;
+    
+    head->next = p;
+    p->prev = head;
 
-	p->next = next;
-	if (next) {
-		next->prev = p;
-	}
+    p->next = next;
+    if (next) {
+        next->prev = p;
+    }
 }
 
 static inline void list_remove(list_head* p)
 {
-	list_head* next = p->next;
-	list_head* prev = p->prev;
+    list_head* next = p->next;
+    list_head* prev = p->prev;
 
-	if (next) {
-		next->prev = prev;
-	}
+    if (next) {
+        next->prev = prev;
+    }
 
-	if (prev) {
-		prev->next = next;
-	}
+    if (prev) {
+        prev->next = next;
+    }
 }
 
 static inline bool list_empty(list_head* head)
 {
-	return (head->next == NULL) && (head->prev == NULL);
+    return (head->next == NULL) && (head->prev == NULL);
 }
 
 #define list_for_each(head, p) \
-	for(list_head* p = head.next; p != NULL; p = p->next)
+    for(list_head* p = head.next; p != NULL; p = p->next)

@@ -3,6 +3,7 @@
 
 #include "arena.h"
 #include "test.h"
+#include "strings.h"
 
 #if defined(TEST)
 
