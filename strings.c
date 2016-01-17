@@ -17,15 +17,28 @@
 #define HASH_KEY_CMP_FUNC strcomp
 #define HASH_PREFIX string_table
 
+// http://www.cse.yorku.ca/~oz/hash.html
+static unsigned int sdbm(const char* str)
+{
+    unsigned int hash = 0;
+    int c;
+
+    while ((c = *str++)) {
+        hash = c + (hash << 6) + (hash << 16) - hash;
+    }
+
+    return hash;
+}
+
 static uint32_t strhash(const char* key) {
-    return key[0] + key[strlen(key)];
+    return (uint32_t)sdbm(key);
 }
 
 static bool strcomp(const char* lhv, const char* rhv) {
     return 0 == strcmp(lhv, rhv);
 }
 
-#include "hash.inl"
+#include "small_object_set.inl"
 
 static arena_t* g_string_arena = NULL;
 static string_table_t* g_string_table = NULL;
@@ -124,17 +137,43 @@ TEST_ADD(strings_test);
 #undef  HASH_PREFIX
 #define HASH_PREFIX dict
 
-static inline uint32_t string_hash(string_t key) {
-    return (uint32_t)(uintptr_t)(_S(key));
+// http://web.archive.org/web/20071223173210/http://www.concentric.net/~Ttwang/tech/inthash.htm
+// TODO: work on instruction parallelism
+static inline uint32_t hash6432shift(uint64_t key) {
+    key = (~key) + (key << 18); // key = (key << 18) - key - 1;
+    key = key ^ (key >> 31);
+    key = (key + (key << 2)) + (key << 4);
+    key = key ^ (key >> 11);
+    key = key + (key << 6);
+    key = key ^ (key >> 22);
+    return (uint32_t) key;
+}
+
+// Random stack overflow answer
+static inline uint32_t inthash(uint32_t x) {
+    x = ((x >> 16) ^ x) * 0x45d9f3b;
+    x = ((x >> 16) ^ x) * 0x45d9f3b;
+    x = ((x >> 16) ^ x);
+    return x;
+}
+
+static inline uint32_t string_hash(string_t s) {
+    // Since stored string pointers are unique we can has them directly as a 64bit value
+    return hash6432shift((uintptr_t)_S(s)); 
+    //return inthash((uintptr_t)_S(s)); 
 }
 
 static inline bool string_cmp(string_t lhv, string_t rhv) {
     return _S(lhv) == _S(rhv);
 }
 
-#include "hash.inl"
+#include "small_object_set.inl"
 
 #if defined(TEST)
+
+#include <limits.h>
+#include <stdint.h>
+
 static void dict_test(void)
 {
     int error = strings_init();
@@ -170,6 +209,50 @@ static void dict_test(void)
     strings_destroy();
 }
 TEST_ADD(dict_test);
+
+static void dict_stress_test(void)
+{
+    int error = strings_init();
+    CU_ASSERT_FALSE(error);
+
+    dict_t* dict = dict_create();
+    CU_ASSERT(dict != NULL);
+
+    for (unsigned i = 0; i < HASH_BUCKETS * 16; ++i) {
+        char buf[32] = {0};
+        snprintf(buf, sizeof(buf), "%u", i);
+        string_t str = string(buf);
+        error = dict_insert(dict, str, &str);
+        CU_ASSERT_FALSE(error);
+    }
+
+    size_t max = 0;
+    size_t min = (size_t)(-1);
+    for (unsigned i = 0; i < HASH_BUCKETS; ++i) {
+        size_t length = 0;
+        slist_for_each(dict->buckets[i], p) {
+            dict_entry_t* entry = slist_entry(p, dict_entry_t, link);
+            length += __builtin_popcount(entry->bitmap);
+        }
+
+        //printf(" [%u]: %zu\n", i, length);
+
+        if (length > max) {
+            max = length;
+        }
+
+        if (length < min) {
+            min = length;
+        }
+    }
+
+    printf(" Dict stress stats: min = %zu, max = %zu, mid = %zu ", min, max, min + ((max - min) / 2));
+
+    dict_destroy(dict);
+    strings_destroy();
+}
+TEST_ADD(dict_stress_test);
+
 #endif // TEST
 
 //////////////////////////////////////////////////////////////////////////////
