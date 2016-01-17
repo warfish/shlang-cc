@@ -1,6 +1,6 @@
 /*
  * "Generic" small object set
- * User defined a set of macros and includes this file to produce a specification:
+ * User defines a set of macros and includes this file to produce a specification:
  * - HASH_KEY_TYPE type of stored key values
  * - HASH_VALUE_TYPE type of stored values
  * - HASH_KEY_CMP_FUNC name of the key comparison function: bool(HASH_KEY_CMP_FUNC)(HASH_KEY_TYPE lhv, HASH_KEY_TYPE rhv)
@@ -55,7 +55,7 @@ typedef struct HASH_PREFIX
 } HASH_MAKE_PREFIX(_t);
 
 /**
- * Generate hash entry
+ * Generated hash entry
  * To make things more cache-friendly we allocate a block of multiple stored entries and link those in a chain
  */
 typedef struct 
@@ -88,6 +88,7 @@ HASH_MAKE_PREFIX(_t)* HASH_MAKE_PREFIX(_create)(void)
 
 static HASH_MAKE_PREFIX(_entry_t)* HASH_MAKE_PREFIX(_create_entry)(HASH_MAKE_PREFIX(_t)* hash)
 {
+    // TODO: 64-byte aligned alloc
     HASH_MAKE_PREFIX(_entry_t)* entry = arena_alloc(hash->arena, sizeof(*entry));
     if (!entry) {
         return NULL;
