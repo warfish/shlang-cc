@@ -1,4 +1,4 @@
-CFLAGS := -Wall -g -std=c11 -I.
+CFLAGS := -Wall -g -std=c11 -I. -D_POSIX_C_SOURCE=200809L 
 LDFLAGS := -g -T test_sec.lds
 NASM := nasm
 
@@ -15,7 +15,7 @@ test: Makefile $(TARGET)
 all: Makefile $(TARGET)
 
 $(TARGET): $(HDRS) $(OBJS)
-	$(CC) $(LDFLAGS) $(OBJS) -lcunit -o $@
+	$(CC) $(LDFLAGS) $(OBJS) -lcunit -lpcre -o $@
 
 %.o:%.s
 	$(NASM) $< -f elf64 -o $@

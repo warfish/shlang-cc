@@ -4,6 +4,7 @@
 #include "arena.h"
 #include "test.h"
 #include "strings.h"
+#include "scanner.h"
 
 #if defined(TEST)
 
@@ -42,8 +43,16 @@ static int RunUnitTests() { return 0; }
 
 int main(void) 
 {
+    int err = 0;
+
     if (CUE_SUCCESS != RunUnitTests()) {
         return EXIT_FAILURE;
+    }
+
+    err = init_scanner();
+    if (err) {
+        fprintf(stderr, "Could not initialize scanner: %d\n", err);
+        return err;
     }
 
     return 0;
