@@ -17,12 +17,6 @@ typedef enum
     kTokenTotal // Always last
 } token_type_t;
 
-typedef struct token
-{
-    token_type_t type;
-    string_t value;
-} token_t;
-
 typedef enum
 {
     kIntegerTypeInt,
@@ -35,6 +29,13 @@ typedef enum
 
     kIntegerDefaultType = kIntegerTypeInt
 } integer_literal_type_t;
+
+typedef struct token
+{
+    token_type_t type;
+    string_t value;
+    integer_literal_type_t inttype; /* Valid only for kTokenIntConstant */
+} token_t;
 
 /**
  * Init scanner.

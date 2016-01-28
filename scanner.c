@@ -9,11 +9,18 @@
 #include <errno.h>
 #include <assert.h>
 
-typedef struct matcher
+static bool is_word_boundary(char c)
 {
-    token_type_t type;  // Token type this matcher matches for
-    bool(*match)(struct matcher* matcher, input_buffer_t* in, token_t* token);
-} matcher_t;
+    // Now i see why older compilers required a new line at the end of file
+    return (isspace(c) || (c == EOF));
+}
+
+static void make_token(token_t* token, token_type_t type, const char* value, integer_literal_type_t inttype)
+{
+    token->type = type;
+    token->value = string(value);
+    token->inttype = inttype;
+}
 
 static bool match_word(const char* word, size_t offset, input_buffer_t* in, token_t* token)
 {
@@ -25,7 +32,7 @@ static bool match_word(const char* word, size_t offset, input_buffer_t* in, toke
     const char* str = word + offset;
     do {
         char c = buffer_getchar(in);
-        if (*str == '\0' && (isspace(c) || buffer_iseof(in))) {
+        if (*str == '\0' && is_word_boundary(c)) {
             token->value = string(word);
             return true;
         } else if (*str != c) {
@@ -314,7 +321,7 @@ bool match_identifier(input_buffer_t* in, token_t* token)
 
     for (int i = 1; i < SHL_IDENTIFIER_LIMIT; ++i) {
         char c = buffer_getchar(in);
-        if (isspace(c) || buffer_iseof(in)) {
+        if (is_word_boundary(c)) {
             token->value = string(buf);
             return true;
         } else if (!isalnum(c) && (c != '_')) {
@@ -396,7 +403,7 @@ static bool match_integer_constant(input_buffer_t* in, token_t* token)
     integer_literal_type_t type = kIntegerDefaultType;
 
     char c = buffer_getchar(in);
-    if (isspace(c) || buffer_iseof(in) || !isdigit(c)) {
+    if (!isdigit(c)) {
         return false;
     }
 
@@ -405,7 +412,7 @@ static bool match_integer_constant(input_buffer_t* in, token_t* token)
     if (c == '0') {
         /* Hex or oct number or just 0 */
         c = buffer_getchar(in);
-        if (isspace(c) || buffer_iseof(in)) {
+        if (is_word_boundary(c)) {
             token->value = string(buf);
             return true;
         } else if (c == 'x' || c == 'X') {
@@ -424,7 +431,7 @@ static bool match_integer_constant(input_buffer_t* in, token_t* token)
     /* Parse remaining (x)digits */
     for (; i < SHL_IDENTIFIER_LIMIT; ++i) {
         c = buffer_getchar(in);
-        if (isspace(c) || buffer_iseof(in)) {
+        if (is_word_boundary(c)) {
             token->value = string(buf);
             return true;
         }
@@ -441,44 +448,29 @@ static bool match_integer_constant(input_buffer_t* in, token_t* token)
     }
 
     /* Parse suffix */
+
+    bool is_unsigned = false;
+
     switch (c) {
-    case 'u':
+    case 'u': 
     case 'U':
-        c = buffer_getchar(in);
-        if (isspace(c) || buffer_iseof(in)) {
-            type = kIntegerTypeUnsigned;
-            return true;
-        }
+        is_unsigned = true;
+        break;
+    default: return false;
+    };
 
-        switch (c) {
-        case 'l':
-        case 'L':
-            c = buffer_getchar(in);
-            if (isspace(c) || buffer_iseof(in)) {
-                type = kIntegerTypeUnsignedLong;
-                return true;
-            }
+    c = buffer_getchar(in);
+    if (is_word_boundary(c)) {
+        make_token(token, kTokenIntConstant, buf, (is_unsigned ? kIntegerTypeUnsigned : kIntegerTypeInt));
+        return true;
+    }
 
-            switch (c) {
-            case 'l':
-            case 'L':
-                c = buffer_getchar(in);
-                if (isspace(c) || buffer_iseof(in)) {
-                    type = kIntegerTypeUnsignedLongLong;
-                    return true;
-                } else {
-                    return false;
-                }
-            default:    return false;
-            };
-        default:    return false;
-        };
-
+    switch (c) {
     case 'l':
     case 'L':
         c = buffer_getchar(in);
-        if (isspace(c) || buffer_iseof(in)) {
-            type = kIntegerTypeLong;
+        if (is_word_boundary(c)) {
+            make_token(token, kTokenIntConstant, buf, (is_unsigned ? kIntegerTypeUnsignedLong : kIntegerTypeLong));
             return true;
         }
 
@@ -486,15 +478,16 @@ static bool match_integer_constant(input_buffer_t* in, token_t* token)
         case 'l':
         case 'L':
             c = buffer_getchar(in);
-            if (isspace(c) || buffer_iseof(in)) {
-                type = kIntegerTypeLongLong;
+            if (is_word_boundary(c)) {
+                make_token(token, kTokenIntConstant, buf, (is_unsigned ? kIntegerTypeUnsignedLongLong : kIntegerTypeLongLong));
                 return true;
             } else {
                 return false;
             }
-            default:    return false;
+
+        default: return false;
         };
-    default:    return false;
+    default: return false;
     };
 }
 
