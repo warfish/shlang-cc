@@ -6,8 +6,8 @@
 
 #include "strings.h"
 #include "buffer.h"
- 
-typedef enum 
+
+typedef enum
 {
     kTokenKeyword,
     kTokenIdentifier,
@@ -22,6 +22,19 @@ typedef struct token
     token_type_t type;
     string_t value;
 } token_t;
+
+typedef enum
+{
+    kIntegerTypeInt,
+    kIntegerTypeLong,
+    kIntegerTypeLongLong,
+
+    kIntegerTypeUnsigned,
+    kIntegerTypeUnsignedLong,
+    kIntegerTypeUnsignedLongLong,
+
+    kIntegerDefaultType = kIntegerTypeInt
+} integer_literal_type_t;
 
 /**
  * Init scanner.

@@ -55,13 +55,13 @@ bool match_keyword(input_buffer_t* in, token_t* token)
     case 'b':   return match_word("break", 1, in, token);
 
     /* const | char | continue | case */
-    case 'c':   
+    case 'c':
         switch (c = buffer_getchar(in)) {
         case 'a':   return match_word("case", 2, in, token);
         case 'h':   return match_word("char", 2, in, token);
-        case 'o':   
+        case 'o':
             switch (c = buffer_getchar(in)) {
-            case 'n': 
+            case 'n':
                 switch (c = buffer_getchar(in)) {
                 case 's':   return match_word("const", 4, in, token);
                 case 't':   return match_word("continue", 4, in, token);
@@ -73,13 +73,13 @@ bool match_keyword(input_buffer_t* in, token_t* token)
         };
 
     /* double | do | default */
-    case 'd':   
+    case 'd':
         switch (c = buffer_getchar(in)) {
         case 'e':   return match_word("default", 2, in, token);
         case 'o':
             switch (c = buffer_getchar(in)) {
             case 'u':   return match_word("double", 3, in, token);
-            default:    
+            default:
                 if (isspace(c) || buffer_iseof(in)) {
                     token->value = string("do");
                     return true;
@@ -91,7 +91,7 @@ bool match_keyword(input_buffer_t* in, token_t* token)
         };
 
     /* extern | else | enum */
-    case 'e':   
+    case 'e':
         switch (c = buffer_getchar(in)) {
         case 'x':   return match_word("extern", 2, in, token);
         case 'l':   return match_word("else", 2, in, token);
@@ -100,7 +100,7 @@ bool match_keyword(input_buffer_t* in, token_t* token)
         };
 
     /* float | for */
-    case 'f':   
+    case 'f':
         switch (c = buffer_getchar(in)) {
         case 'l':   return match_word("float", 2, in, token);
         case 'o':   return match_word("for", 2, in, token);
@@ -114,7 +114,7 @@ bool match_keyword(input_buffer_t* in, token_t* token)
     case 'i':
         switch (c = buffer_getchar(in)) {
         case 'f':   return match_word("if", 2, in, token);
-        case 'n':   
+        case 'n':
             switch (c = buffer_getchar(in)) {
             case 't':   return match_word("int", 3, in, token);
             case 'l':   return match_word("inline", 3, in, token);
@@ -127,7 +127,7 @@ bool match_keyword(input_buffer_t* in, token_t* token)
     case 'l':   return match_word("long", 1, in, token);
 
     /* return | register | restrict */
-    case 'r':   
+    case 'r':
         switch (c = buffer_getchar(in)) {
         case 'e':
             switch (c = buffer_getchar(in)) {
@@ -140,7 +140,7 @@ bool match_keyword(input_buffer_t* in, token_t* token)
         };
 
     /* static | short | signed | sizeof | struct | switch */
-    case 's': 
+    case 's':
         switch(c = buffer_getchar(in)) {
         case 'h':   return match_word("short", 2, in, token);
         case 't':
@@ -149,7 +149,7 @@ bool match_keyword(input_buffer_t* in, token_t* token)
             case 'r':   return match_word("struct", 3, in, token);
             default:    return false;
             };
-        case 'i':   
+        case 'i':
             switch (c = buffer_getchar(in)) {
             case 'g':   return match_word("signed", 3, in, token);
             case 'z':   return match_word("sizeof", 3, in, token);
@@ -163,7 +163,7 @@ bool match_keyword(input_buffer_t* in, token_t* token)
     case 't':   return match_word("typedef", 1, in, token);
 
     /* unsigned | union */
-    case 'u':   
+    case 'u':
         switch (c = buffer_getchar(in)) {
         case 'n':
             switch (c = buffer_getchar(in)) {
@@ -177,7 +177,7 @@ bool match_keyword(input_buffer_t* in, token_t* token)
     /* volatile | void */
     case 'v':
         switch (c = buffer_getchar(in)) {
-        case 'o':   
+        case 'o':
             switch (c = buffer_getchar(in)) {
             case 'i':   return match_word("void", 3, in, token);
             case 'l':   return match_word("volatile", 3, in, token);
@@ -260,22 +260,22 @@ static void test_keyword_matcher(void)
     };
 
     const char* invalid[] = {
-        "class", "namespace", "template", "typename", "virtual", "final", "throw", "catch", "try", 
+        "class", "namespace", "template", "typename", "virtual", "final", "throw", "catch", "try",
         "bool", "true", "false", "offsetof", "alignof", "containerof", "", " "
     };
 
     for (size_t i = 0; i < countof(valid); ++i) {
         const char* str = valid[i];
-        
+
         ib = buffer_mem((void*)str, strlen(str));
         CU_ASSERT(ib != NULL);
         CU_ASSERT_TRUE(match_keyword(ib, &token));
         CU_ASSERT_TRUE(token.type == kTokenKeyword);
         if (0 != strcmp(_S(token.value), str)) {
             printf("%s\n", str);
-            CU_ASSERT_TRUE(0);    
+            CU_ASSERT_TRUE(0);
         }
-        
+
         buffer_close(ib);
     }
 
@@ -291,7 +291,7 @@ static void test_keyword_matcher(void)
     }
 }
 TEST_ADD(test_keyword_matcher);
-#endif 
+#endif
 
 #define SHL_IDENTIFIER_LIMIT 63
 
@@ -304,7 +304,7 @@ bool match_identifier(input_buffer_t* in, token_t* token)
 
     char buf[SHL_IDENTIFIER_LIMIT + 1] = {0};
     char* p = buf;
-    
+
     // Identifier is a word that started with an ASCII alpha or underscore and followed any number by ASCII alpha, underscore or number symbols
     *p = buffer_getchar(in);
     if (!isalpha(*p) && (*p != '_')) {
@@ -373,7 +373,7 @@ static void test_identifier_matcher(void)
     }
 }
 TEST_ADD(test_identifier_matcher);
-#endif 
+#endif
 
 static bool match_integer_constant(input_buffer_t* in, token_t* token)
 {
@@ -387,52 +387,47 @@ static bool match_integer_constant(input_buffer_t* in, token_t* token)
     // - 0 follwed by any num (oct)
     // - any num (dec)
     //
-    // TODO: All of those can have suffixes: u, ul, ull in any case combination
+    // All of those can have suffixes: u, ul, l, ll, ull in any case combination
 
     char buf[SHL_IDENTIFIER_LIMIT + 1] = {0};
     size_t i = 0;
     bool hex = false;
     bool oct = false;
+    integer_literal_type_t type = kIntegerDefaultType;
 
     char c = buffer_getchar(in);
-    if (isspace(c) || buffer_iseof(in)) {
+    if (isspace(c) || buffer_iseof(in) || !isdigit(c)) {
         return false;
     }
 
-    if (c == '-') {
-        buf[i++] = c;
-        c = buffer_getchar(in);
-    }
+    buf[i++] = c;
 
     if (c == '0') {
-        buf[i++] = c;
+        /* Hex or oct number or just 0 */
         c = buffer_getchar(in);
         if (isspace(c) || buffer_iseof(in)) {
             token->value = string(buf);
             return true;
         } else if (c == 'x' || c == 'X') {
             hex = true;
+            buf[i++] = c;
         } else if (c >= '1' && c <= '8') {
             oct = true;
+            buf[i++] = c;
         } else {
             return false;
         }
     }
 
     bool dec = !hex && !oct;
-    if (dec && !isdigit(c)) {
-        return false;
-    }
 
-    buf[i++] = c;
-
-    /* Parse remaining (hex|oct|dec)digits */
+    /* Parse remaining (x)digits */
     for (; i < SHL_IDENTIFIER_LIMIT; ++i) {
         c = buffer_getchar(in);
         if (isspace(c) || buffer_iseof(in)) {
             token->value = string(buf);
             return true;
-        } 
+        }
 
         if (hex && !isxdigit(c)) {
             break;
@@ -445,44 +440,62 @@ static bool match_integer_constant(input_buffer_t* in, token_t* token)
         }
     }
 
-    /* Parse optional suffix */
+    /* Parse suffix */
     switch (c) {
     case 'u':
     case 'U':
-        buf[i++] = c; 
         c = buffer_getchar(in);
         if (isspace(c) || buffer_iseof(in)) {
-            token->value = string(buf);
+            type = kIntegerTypeUnsigned;
             return true;
-        } 
-        switch (toupper(c)) {
+        }
+
+        switch (c) {
         case 'l':
-        case 'L': 
-            buf[i++] = c; 
+        case 'L':
             c = buffer_getchar(in);
             if (isspace(c) || buffer_iseof(in)) {
-                token->value = string(buf);
+                type = kIntegerTypeUnsignedLong;
                 return true;
-            } 
-            switch(toupper(c)) {
+            }
+
+            switch (c) {
             case 'l':
             case 'L':
-                buf[i++] = c; 
                 c = buffer_getchar(in);
                 if (isspace(c) || buffer_iseof(in)) {
-                    token->value = string(buf);
+                    type = kIntegerTypeUnsignedLongLong;
                     return true;
                 } else {
                     return false;
                 }
-            default: return false;
+            default:    return false;
             };
-        default: return false;
+        default:    return false;
         };
-    default: return false;
-    };
 
-    return false;
+    case 'l':
+    case 'L':
+        c = buffer_getchar(in);
+        if (isspace(c) || buffer_iseof(in)) {
+            type = kIntegerTypeLong;
+            return true;
+        }
+
+        switch (c) {
+        case 'l':
+        case 'L':
+            c = buffer_getchar(in);
+            if (isspace(c) || buffer_iseof(in)) {
+                type = kIntegerTypeLongLong;
+                return true;
+            } else {
+                return false;
+            }
+            default:    return false;
+        };
+    default:    return false;
+    };
 }
 
 #if defined(TEST)
@@ -495,27 +508,24 @@ static void test_integer_constant_matcher(void)
 
     const char* valid[] = {
         "0",
-        "-0",
         "12",
-        "-12",
         "10u",
         "10UL",
         "10ull",
         "0xdeadf00d",
         "-0xdeadf00d",
         "0Xbaba17ba",
-        "-0Xbaba17ba",
         "0xcafebeefu",
         "0xcafebeefUL",
         "0xcafebeefull",
         "012345678",
-        "-012345678",
         "042u",
         "042UL",
         "042ull",
     };
 
     const char* invalid[] = {
+        "-42",
         "deadf00d",
         "0deaff00d",
         "00",
@@ -543,7 +553,7 @@ static void test_integer_constant_matcher(void)
     }
 }
 TEST_ADD(test_integer_constant_matcher);
-#endif 
+#endif
 
 // Order follows matcher priority
 static bool(*g_matchers[])(input_buffer_t* ib, token_t* token) = {
@@ -563,7 +573,7 @@ static bool(*g_matchers[])(input_buffer_t* ib, token_t* token) = {
 
 int init_scanner(void)
 {
-//    for (size_t i = 0; i < countof(g_all_regex); ++i) 
+//    for (size_t i = 0; i < countof(g_all_regex); ++i)
 //    {
 //        regex_t* re = g_all_regex[i];
 //
@@ -638,6 +648,6 @@ static void keyword_matcher_test(void)
 }
 //TEST_ADD(keyword_matcher_test);
 
-#endif 
+#endif
 
 /////////////////////////////////////////////////////////////////////////////////
