@@ -153,20 +153,10 @@ void buffer_set_offset(input_buffer_t* ib, size_t pos)
 
 static void input_buffer_test(void)
 {
-    input_buffer_t* ib = buffer_open("/home/evgeny/shlang/buffer.c");
-    CU_ASSERT(ib != NULL);
-
-    //const char* line = NULL;
-    //int i = 0;
-    //while (NULL != (line = buffer_getline(ib))) {
-        //printf("%d: %s\n", i++, line);
-        //free((void*)line);
-    //}
-
-    buffer_close(ib);
+    // TODO
 }
 TEST_ADD(input_buffer_test);
 
-#endif 
+#endif
 
 /////////////////////////////////////////////////////////////////////////////////
