@@ -71,6 +71,36 @@ static bool make_token(token_t* token, token_type_t type, const char* value, int
     return true;
 }
 
+typedef struct dfa_rule {
+    char symbol;
+    size_t total;
+    const struct dfa_rule* next;
+} dfa_rule_t;
+
+static bool dfa_match(const dfa_rule_t* dfa, size_t total, input_buffer_t* ib, char* buf, size_t bufsize)
+{
+    assert(ib);
+    assert(buf);
+
+    char c = buffer_getchar(ib);
+    if (iseow(c)) {
+        return true;
+    }
+
+    if (bufsize == 0) {
+        return false;
+    }
+
+    for (size_t i = 0; i < total; ++i) {
+        if (dfa[i].symbol == c) {
+            *buf = c;
+            return dfa_match(dfa[i].next, dfa[i].total, ib, ++buf, --bufsize);
+        }
+    }
+
+    return false;
+}
+
 static bool match_full_word(const char* word, size_t offset, input_buffer_t* in, token_t* token)
 {
     assert(word);
@@ -96,10 +126,62 @@ static bool match_full_word(const char* word, size_t offset, input_buffer_t* in,
     return true;
 }
 
-bool match_keyword(input_buffer_t* in, token_t* token)
+static bool match_keyword(input_buffer_t* in, token_t* token)
 {
     assert(in);
     assert(token);
+
+#if 0
+    dfa_rule_t l3_1[]  = { { '=', 0, NULL } };
+
+    dfa_rule_t l2_1[]  = { { '=', 0, NULL }, { '+', 0, NULL } }; // '+'
+    dfa_rule_t l2_2[]  = { { '=', 0, NULL }, { '-', 0, NULL } }; // '-'
+    dfa_rule_t l2_3[]  = { { '=', 0, NULL } }; // '*'
+    dfa_rule_t l2_4[]  = { { '=', 0, NULL } }; // '/'
+    dfa_rule_t l2_5[]  = { { '=', 0, NULL } }; // '='
+    dfa_rule_t l2_6[]  = { { '=', 0, NULL }, { '<', countof(l3_1), l3_1 } }; // '<'
+    dfa_rule_t l2_7[]  = { { '=', 0, NULL }, { '>', countof(l3_1), l3_1 } }; // '>'
+    dfa_rule_t l2_8[]  = { { '=', 0, NULL } }; // '!'
+    dfa_rule_t l2_9[]  = { { '=', 0, NULL } }; // '%'
+    dfa_rule_t l2_10[] = { { '=', 0, NULL }, { '&', 0, NULL } }; // '&'
+    dfa_rule_t l2_11[] = { { '=', 0, NULL }, { '|', 0, NULL } }; // '|'
+    dfa_rule_t l2_12[] = { { '=', 0, NULL } }; // '^'
+    dfa_rule_t l2_13[] = { { '=', 0, NULL } }; // '~'
+
+    dfa_rule_t dfa_c_o_n [] = {
+        { 's', 1, dfa_match_word("const", 3) },
+        { 't', 1, dfa_match_word("continue", 3) },
+    };
+
+    dfa_rule_t dfa_c_o[] = {
+        { 'n', countof(dfa_c_o_n), dfa_c_o_n },
+    };
+
+    dfa_rule_t dfa_c[] = {
+        { 'a', 1, dfa_match_word("case", 2) },
+        { 'h', 1, dfa_match_word("char", 2) },
+        { 'o', countof(dfa_c_o), dfa_c_o },
+    };
+
+    dfa_rule_t dfa[] = {
+        { 'a', 1, dfa_match_word("auto", 1) },
+        { 'b', 1, dfa_match_word("break", 1) },
+        { 'c', countof(dfa_c), dfa_c },
+        { 'd', countof(dfa_d), dfa_d },
+        { 'e', countof(l2_5), l2_5 },
+        { 'f', countof(l2_6), l2_6 },
+        { 'g', countof(l2_7), l2_7 },
+        { 'i', countof(l2_8), l2_8 },
+        { 'l', countof(l2_9), l2_9 },
+        { 'r', countof(l2_10), l2_10 },
+        { 's', countof(l2_11), l2_11 },
+        { 't', countof(l2_12), l2_12 },
+        { 'u', countof(l2_13), l2_13 },
+        { 'v', countof(l2_13), l2_13 },
+        { 'w', countof(l2_13), l2_13 },
+        { '_', countof(l2_13), l2_13 },
+    };
+#endif // 0
 
     token->type = kTokenKeyword;
 
@@ -342,262 +424,50 @@ static void test_keyword_matcher(void)
 }
 TEST_ADD(test_keyword_matcher);
 
-
-bool match_operator(input_buffer_t* in, token_t* token)
+static bool match_operator(input_buffer_t* in, token_t* token)
 {
     assert(in);
     assert(token);
 
-    char c = buffer_getchar(in);
-    switch (c) {
-    case '+':
-        if (iseow(c = buffer_getchar(in))) {
-            return make_token(token, kTokenOperator, "+", 0);
-        }
+    // TODO: Generate dfa rules?
+    dfa_rule_t l3_1[]  = { { '=', 0, NULL } };
 
-        switch (c) {
-        case '+':
-            if (iseow(c = buffer_getchar(in))) {
-                return make_token(token, kTokenOperator, "++", 0);
-            }
+    dfa_rule_t l2_1[]  = { { '=', 0, NULL }, { '+', 0, NULL } }; // '+'
+    dfa_rule_t l2_2[]  = { { '=', 0, NULL }, { '-', 0, NULL } }; // '-'
+    dfa_rule_t l2_3[]  = { { '=', 0, NULL } }; // '*'
+    dfa_rule_t l2_4[]  = { { '=', 0, NULL } }; // '/'
+    dfa_rule_t l2_5[]  = { { '=', 0, NULL } }; // '='
+    dfa_rule_t l2_6[]  = { { '=', 0, NULL }, { '<', countof(l3_1), l3_1 } }; // '<'
+    dfa_rule_t l2_7[]  = { { '=', 0, NULL }, { '>', countof(l3_1), l3_1 } }; // '>'
+    dfa_rule_t l2_8[]  = { { '=', 0, NULL } }; // '!'
+    dfa_rule_t l2_9[]  = { { '=', 0, NULL } }; // '%'
+    dfa_rule_t l2_10[] = { { '=', 0, NULL }, { '&', 0, NULL } }; // '&'
+    dfa_rule_t l2_11[] = { { '=', 0, NULL }, { '|', 0, NULL } }; // '|'
+    dfa_rule_t l2_12[] = { { '=', 0, NULL } }; // '^'
+    dfa_rule_t l2_13[] = { { '=', 0, NULL } }; // '~'
 
-        case '=':
-            if (iseow(c = buffer_getchar(in))) {
-                return make_token(token, kTokenOperator, "+=", 0);
-            }
-
-        default:
-            return false;
-        };
-
-    case '-':
-        if (iseow(c = buffer_getchar(in))) {
-            return make_token(token, kTokenOperator, "-", 0);
-        }
-
-        switch (c) {
-        case '-':
-            if (iseow(c = buffer_getchar(in))) {
-                return make_token(token, kTokenOperator, "--", 0);
-            }
-
-        case '=':
-            if (iseow(c = buffer_getchar(in))) {
-                return make_token(token, kTokenOperator, "-=", 0);
-            }
-
-        default:
-            return false;
-        };
-
-    case '*':
-        if (iseow(c = buffer_getchar(in))) {
-            return make_token(token, kTokenOperator, "*", 0);
-        }
-
-        switch (c) {
-        case '=':
-            if (iseow(c = buffer_getchar(in))) {
-                return make_token(token, kTokenOperator, "*=", 0);
-            }
-
-        default:
-            return false;
-        };
-
-    case '/':
-        if (iseow(c = buffer_getchar(in))) {
-            return make_token(token, kTokenOperator, "/", 0);
-        }
-
-        switch (c) {
-        case '=':
-            if (iseow(c = buffer_getchar(in))) {
-                return make_token(token, kTokenOperator, "/=", 0);
-            }
-
-        default:
-            return false;
-        };
-
-    case '=':
-        if (iseow(c = buffer_getchar(in))) {
-            return make_token(token, kTokenOperator, "=", 0);
-        }
-
-        switch (c) {
-        case '=':
-            if (iseow(c = buffer_getchar(in))) {
-                return make_token(token, kTokenOperator, "==", 0);
-            }
-
-        default:
-            return false;
-        };
-
-    case '<':
-        if (iseow(c = buffer_getchar(in))) {
-            return make_token(token, kTokenOperator, "<", 0);
-        }
-
-        switch (c) {
-        case '<':
-            if (iseow(c = buffer_getchar(in))) {
-                return make_token(token, kTokenOperator, "<<", 0);
-            }
-
-            switch (c) {
-            case '=':
-                if (iseow(c = buffer_getchar(in))) {
-                    return make_token(token, kTokenOperator, "<<=", 0);
-                }
-
-            default:
-                return false;
-            }
-
-        case '=':
-            if (iseow(c = buffer_getchar(in))) {
-                return make_token(token, kTokenOperator, "<=", 0);
-            }
-
-        default:
-            return false;
-        };
-
-    case '>':
-        if (iseow(c = buffer_getchar(in))) {
-            return make_token(token, kTokenOperator, ">", 0);
-        }
-
-        switch (c) {
-        case '>':
-            if (iseow(c = buffer_getchar(in))) {
-                return make_token(token, kTokenOperator, ">>", 0);
-            }
-
-            switch (c) {
-            case '=':
-                if (iseow(c = buffer_getchar(in))) {
-                    return make_token(token, kTokenOperator, ">>=", 0);
-                }
-
-            default:
-                return false;
-            }
-
-        case '=':
-            if (iseow(c = buffer_getchar(in))) {
-                return make_token(token, kTokenOperator, ">=", 0);
-            }
-
-        default:
-            return false;
-        };
-
-    case '!':
-        if (iseow(c = buffer_getchar(in))) {
-            return make_token(token, kTokenOperator, "!", 0);
-        }
-
-        switch (c) {
-        case '=':
-            if (iseow(c = buffer_getchar(in))) {
-                return make_token(token, kTokenOperator, "!=", 0);
-            }
-
-        default:
-            return false;
-        };
-
-    case '%':
-        if (iseow(c = buffer_getchar(in))) {
-            return make_token(token, kTokenOperator, "%", 0);
-        }
-
-        switch (c) {
-        case '=':
-            if (iseow(c = buffer_getchar(in))) {
-                return make_token(token, kTokenOperator, "%=", 0);
-            }
-
-        default:
-            return false;
-        };
-
-    case '&':
-        if (iseow(c = buffer_getchar(in))) {
-            return make_token(token, kTokenOperator, "&", 0);
-        }
-
-        switch (c) {
-        case '&':
-            if (iseow(c = buffer_getchar(in))) {
-                return make_token(token, kTokenOperator, "&&", 0);
-            }
-
-        case '=':
-            if (iseow(c = buffer_getchar(in))) {
-                return make_token(token, kTokenOperator, "&=", 0);
-            }
-
-        default:
-            return false;
-        };
-
-    case '|':
-        if (iseow(c = buffer_getchar(in))) {
-            return make_token(token, kTokenOperator, "|", 0);
-        }
-
-        switch (c) {
-        case '|':
-            if (iseow(c = buffer_getchar(in))) {
-                return make_token(token, kTokenOperator, "||", 0);
-            }
-
-        case '=':
-            if (iseow(c = buffer_getchar(in))) {
-                return make_token(token, kTokenOperator, "|=", 0);
-            }
-
-        default:
-            return false;
-        };
-
-    case '^':
-        if (iseow(c = buffer_getchar(in))) {
-            return make_token(token, kTokenOperator, "^", 0);
-        }
-
-        switch (c) {
-        case '=':
-            if (iseow(c = buffer_getchar(in))) {
-                return make_token(token, kTokenOperator, "^=", 0);
-            }
-
-        default:
-            return false;
-        };
-
-    case '~':
-        if (iseow(c = buffer_getchar(in))) {
-            return make_token(token, kTokenOperator, "~", 0);
-        }
-
-        switch (c) {
-        case '=':
-            if (iseow(c = buffer_getchar(in))) {
-                return make_token(token, kTokenOperator, "~=", 0);
-            }
-
-        default:
-            return false;
-        };
-
-    default:
-        return false;
+    dfa_rule_t dfa[] = {
+        { '+', countof(l2_1), l2_1 },
+        { '-', countof(l2_2), l2_2 },
+        { '*', countof(l2_3), l2_3 },
+        { '/', countof(l2_4), l2_4 },
+        { '=', countof(l2_5), l2_5 },
+        { '<', countof(l2_6), l2_6 },
+        { '>', countof(l2_7), l2_7 },
+        { '!', countof(l2_8), l2_8 },
+        { '%', countof(l2_9), l2_9 },
+        { '&', countof(l2_10), l2_10 },
+        { '|', countof(l2_11), l2_11 },
+        { '^', countof(l2_12), l2_12 },
+        { '~', countof(l2_13), l2_13 },
     };
+
+    char buf[SHL_IDENTIFIER_LIMIT + 1] = {0};
+    if (dfa_match(dfa, countof(dfa), in, buf, SHL_IDENTIFIER_LIMIT)) {
+        return make_token(token, kTokenOperator, buf, 0);
+    }
+
+    return false;
 }
 
 static void test_operator_matcher(void)
@@ -610,7 +480,10 @@ static void test_operator_matcher(void)
         CU_ASSERT(ib != NULL);
 
         token_t token;
-        CU_ASSERT_TRUE(match_operator(ib, &token));
+        if(!match_operator(ib, &token)) {
+            printf("%s\n", g_operators[i]);
+            CU_ASSERT(0);
+        }
         CU_ASSERT_TRUE(token.type == kTokenOperator);
         CU_ASSERT_TRUE(0 == strcmp(_S(token.value), g_operators[i]));
 
@@ -620,7 +493,7 @@ static void test_operator_matcher(void)
 TEST_ADD(test_operator_matcher);
 
 
-bool match_identifier(input_buffer_t* in, token_t* token)
+static bool match_identifier(input_buffer_t* in, token_t* token)
 {
     assert(in);
     assert(token);
