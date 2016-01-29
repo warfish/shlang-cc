@@ -7,6 +7,7 @@
 #include <stdbool.h>
 #include <ctype.h>
 #include <errno.h>
+#include <stdio.h>
 #include <assert.h>
 
 #define SHL_IDENTIFIER_LIMIT 63
