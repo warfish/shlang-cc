@@ -1,5 +1,5 @@
 /*
- * All test fptrs are put into a separate elf section and then iterated over 
+ * All test fptrs are put into a separate elf section and then iterated over
  */
 
 #pragma once
@@ -29,4 +29,8 @@ typedef void(*test_func_ptr)(void);
 #   error Unsupported toolchain
 #endif
 
-#define TEST_ADD(func) TEST_DECL_CTOR(func)
+#if defined(TEST)
+#   define TEST_ADD(func) TEST_DECL_CTOR(func)
+#else
+#   define TEST_ADD(func)
+#endif

@@ -10,16 +10,18 @@
 typedef enum
 {
     kTokenKeyword,
+    kTokenOperator,
     kTokenIdentifier,
     kTokenIntConstant,
     kTokenStrConstant,
+
 
     kTokenTotal // Always last
 } token_type_t;
 
 typedef enum
 {
-    kIntegerTypeInt,
+    kIntegerTypeInt = 0,
     kIntegerTypeLong,
     kIntegerTypeLongLong,
 

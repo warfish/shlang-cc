@@ -114,7 +114,7 @@ const char* buffer_getline(input_buffer_t* ib)
 
 bool buffer_iseof(input_buffer_t* ib)
 {
-    return (ib->pos > ib->size);
+    return (ib->pos >= ib->size);
 }
 
 char buffer_getchar(input_buffer_t* ib)
@@ -153,7 +153,18 @@ void buffer_set_offset(input_buffer_t* ib, size_t pos)
 
 static void input_buffer_test(void)
 {
-    // TODO
+    char* test = "test";
+    input_buffer_t* ib = buffer_mem(test, strlen(test));
+    CU_ASSERT(ib != NULL);
+
+    CU_ASSERT_EQUAL(test[0], buffer_getchar(ib));
+    CU_ASSERT_EQUAL(test[1], buffer_getchar(ib));
+    CU_ASSERT_EQUAL(test[2], buffer_getchar(ib));
+    CU_ASSERT_EQUAL(test[3], buffer_getchar(ib));
+    CU_ASSERT_EQUAL(EOF, buffer_getchar(ib));
+    CU_ASSERT_TRUE(buffer_iseof(ib));
+
+    buffer_close(ib);
 }
 TEST_ADD(input_buffer_test);
 
